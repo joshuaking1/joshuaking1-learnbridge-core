@@ -13,7 +13,7 @@ export default function TeacherDashboard() {
         <div className="flex flex-col gap-6">
             <div className="space-y-1.5">
                 <h1 className="text-3xl font-bold tracking-tight">Welcome back, {teacherName}!</h1>
-                <p className="text-gray-500 dark:text-gray-400">Here's your command center for the day. Let's make learning amazing.</p>
+                <p className="text-gray-500 dark:text-gray-400">Here&apos;s your command center for the day. Let&apos;s make learning amazing.</p>
             </div>
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

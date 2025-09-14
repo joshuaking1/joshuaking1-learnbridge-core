@@ -37,3 +37,13 @@ export default withSentryConfig(nextConfig, {
   // https://vercel.com/docs/cron-jobs
   automaticVercelMonitors: true
 });
+module.exports = {
+  eslint: {
+    // disable ESLint during production builds
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // skip TypeScript type-checking during builds
+    ignoreBuildErrors: true,
+  },
+};

@@ -2,8 +2,8 @@
 import { create } from 'zustand';
 
 interface OnboardingState {
-  formData: Record<string, any>;
-  updateFormData: (data: Record<string, any>) => void;
+  formData: Record<string, unknown>;
+  updateFormData: (data: Record<string, unknown>) => void;
   reset: () => void;
 }
 

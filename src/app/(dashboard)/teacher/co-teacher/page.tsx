@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlusCircle, Bot, Send, User, Loader2, BookText, FileText, Trash2, Edit, MessageSquare } from 'lucide-react';
+import { PlusCircle, Send, User, Loader2, BookText, FileText, MessageSquare } from 'lucide-react';
 import { createClientComponentClient, User as SupabaseUser } from '@supabase/auth-helpers-nextjs';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
@@ -84,7 +84,7 @@ export default function AICoTeacherPage() {
     const handleNewChat = async () => {
         if (!user) return;
         const newTitle = `Chat Session - ${new Date().toLocaleDateString()}`;
-        const { data, error } = await supabase
+        const { data } = await supabase
             .from('chat_rooms')
             .insert({ user_id: user.id, co_teacher_id: 'general-bot', title: newTitle })
             .select('id, title')
@@ -294,7 +294,7 @@ export default function AICoTeacherPage() {
                                                             remarkPlugins={[remarkGfm]}
                                                             rehypePlugins={[rehypeHighlight]}
                                                             components={{
-                                                            code: ({ node, className, children, ...props }: any) => {
+                                                            code: ({ className, children, ...props }: { className?: string; children: React.ReactNode; [key: string]: unknown }) => {
                                                                 const match = /language-(\w+)/.exec(className || '');
                                                                 const inline = !match;
                                                                 return !inline && match ? (

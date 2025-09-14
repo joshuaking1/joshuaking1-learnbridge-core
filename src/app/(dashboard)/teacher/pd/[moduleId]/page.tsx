@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useSearchParams, useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -198,7 +198,7 @@ export default function ModulePage() {
                             </div>
                             <CardTitle className="text-3xl text-green-700">Congratulations!</CardTitle>
                             <CardDescription className="text-lg">
-                                You have successfully completed "{title}" with a score of {score.toFixed(1)}%
+                                You have successfully completed &quot;{title}&quot; with a score of {score.toFixed(1)}%
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="text-center space-y-4">

@@ -1,10 +1,10 @@
 // src/app/verify/certificate/[certId]/page.tsx
 import { createClient } from '@supabase/supabase-js'; // **IMPORT the generic client**
-import { CheckCircle, XCircle, Bot, Award, AlertTriangle, Calendar } from 'lucide-react';
+import { CheckCircle, Bot, Award, AlertTriangle, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button'; // Import for the button
 
-export default async function CertificateVerificationPage({ params }: { params: { certId: string } }) {
+export default async function CertificateVerificationPage({ params }: { params: Promise<{ certId: string }> }) {
     // **THE DEFINITIVE FIX IS HERE**
     // We create a direct, public client using the environment variables.
     // This client is GUARANTEED to have the 'anon' role.
@@ -13,10 +13,13 @@ export default async function CertificateVerificationPage({ params }: { params: 
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    const { data: certificate, error } = await supabase
+    // Await params before using its properties
+    const { certId } = await params;
+
+    const { data: certificate } = await supabase
         .from('pd_certificates')
         .select('user_name, module_title, issued_at') // Select only the needed public data
-        .eq('id', params.certId)
+        .eq('id', certId)
         .single();
     
     return (
@@ -89,7 +92,7 @@ export default async function CertificateVerificationPage({ params }: { params: 
                             <div className="border-t-2 border-dashed border-gray-300 pt-8">
                                 <div className="text-center">
                                     <p className="text-sm text-gray-500 mb-4">
-                                        Certificate ID: <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{params.certId}</span>
+                                        Certificate ID: <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">{certId}</span>
                                     </p>
                                     <div className="flex items-center justify-center gap-2 text-green-600 mb-6">
                                         <CheckCircle className="h-5 w-5" />

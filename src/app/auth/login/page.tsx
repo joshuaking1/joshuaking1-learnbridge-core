@@ -116,7 +116,7 @@ function LoginPageContent() {
                   </svg>
                 </div>
                 <p className="text-brand-secondary font-medium">Check your email!</p>
-                <p className="text-gray-600 text-sm mt-2">We've sent a magic link to your email address.</p>
+                <p className="text-gray-600 text-sm mt-2">We&apos;ve sent a magic link to your email address.</p>
               </div>
             )}
           </CardContent>

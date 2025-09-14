@@ -150,7 +150,7 @@ export default function ResourceVaultPage() {
                                         </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
-                            )) : (<TableRow><TableCell colSpan={5} className="text-center">You haven't uploaded any resources yet.</TableCell></TableRow>)}
+                            )) : (<TableRow><TableCell colSpan={5} className="text-center">You haven&apos;t uploaded any resources yet.</TableCell></TableRow>)}
                         </TableBody>
                     </Table>
                 </CardContent>

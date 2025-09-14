@@ -18,32 +18,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Wand2, FileDown, Loader2, Save, X, ClipboardEdit, CheckCircle, Bot } from 'lucide-react';
+import { Wand2, FileDown, Loader2, Save, X, ClipboardEdit, CheckCircle } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 
 // ... (Schemas, types, and helper components remain the same) ...
 const lessonPlannerSchema = z.object({ subject: z.string().min(3, "Subject is required"), grade: z.string().min(1, "Form/Class is required"), week: z.number().min(1, "Week number is required"), duration: z.number().min(5, "Duration is required"), strand: z.string().min(3, "Strand is required"), subStrand: z.string().min(3, "Sub-Strand is required"), contentStandard: z.string().min(3, "Content Standard is required") });
 type LessonPlanInputs = z.infer<typeof lessonPlannerSchema>;
 const PlanRow = ({ label, children, isTall = false }: { label: string, children: React.ReactNode, isTall?: boolean }) => (<><div className={`py-4 px-6 font-semibold text-gray-700 bg-gray-50 ${isTall ? 'flex items-start pt-4' : 'flex items-center'}`}>{label}</div><div className={`py-4 px-6 col-span-3 ${isTall ? '' : 'flex items-center'}`}>{children}</div></>);
-const ActivityRow = ({ phase, teacherActivity, learnerActivity }: { phase: string, teacherActivity: string, learnerActivity: string }) => (<><div className="py-4 px-6 font-semibold text-orange-600 bg-orange-50 flex items-start">{phase}</div><div className="py-4 px-6 col-span-3 whitespace-pre-wrap">{teacherActivity}</div><div className="py-4 px-6 col-span-3 whitespace-pre-wrap border-l">{learnerActivity}</div></>);
 type SaveStatus = 'idle' | 'saving' | 'saved';
 
 export default function LessonPlannerPage() {
     // ... (all state declarations remain the same: isGenerating, generatedPlan, isEditing, etc.)
     const [isGenerating, setIsGenerating] = useState(false);
-    const [generatedPlan, setGeneratedPlan] = useState<any>(null);
+    const [generatedPlan, setGeneratedPlan] = useState<unknown>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [activePlanId, setActivePlanId] = useState<string | null>(null);
     const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
     const planExportRef = useRef<HTMLDivElement>(null);
 
     const inputForm = useForm<LessonPlanInputs>({ resolver: zodResolver(lessonPlannerSchema) });
-    const planForm = useForm<any>();
+    const planForm = useForm<Record<string, unknown>>();
     const { watch, reset } = planForm;
     const { prefilledData, clearPrefilledData } = useTransformedDataStore();
 
     // ... (debouncedSave and watch useEffect remain the same) ...
-    const debouncedSave = useDebouncedCallback(async (dataToSave) => { if (!activePlanId) return; setSaveStatus('saving'); try { await fetch('/api/lesson-plans', { method: 'PATCH', body: JSON.stringify({ planId: activePlanId, planData: dataToSave }), }); setSaveStatus('saved'); setTimeout(() => setSaveStatus('idle'), 2000); } catch (error) { toast.error("Auto-save failed."); setSaveStatus('idle'); } }, 2000);
+    const debouncedSave = useDebouncedCallback(async (dataToSave) => { if (!activePlanId) return; setSaveStatus('saving'); try { await fetch('/api/lesson-plans', { method: 'PATCH', body: JSON.stringify({ planId: activePlanId, planData: dataToSave }), }); setSaveStatus('saved'); setTimeout(() => setSaveStatus('idle'), 2000); } catch { toast.error("Auto-save failed."); setSaveStatus('idle'); } }, 2000);
     useEffect(() => { if (isEditing) { const subscription = watch((value) => { debouncedSave(value); }); return () => subscription.unsubscribe(); } }, [isEditing, watch, debouncedSave]);
     useEffect(() => { if (generatedPlan) { reset(generatedPlan); } }, [generatedPlan, reset]);
 
@@ -99,7 +98,7 @@ export default function LessonPlannerPage() {
             .finally(() => setIsGenerating(false));
     };
 
-    const handleSaveChanges = (data: any) => {
+    const handleSaveChanges = (data: Record<string, unknown>) => {
         debouncedSave.flush(); // Immediately save any pending changes
         setGeneratedPlan(data);
         setIsEditing(false);
@@ -287,7 +286,7 @@ export default function LessonPlannerPage() {
                                     <div className="grid grid-cols-7 text-sm font-bold text-center bg-gray-100 border-b mt-4">
                                         <div className="py-3 px-2">Phase</div><div className="py-3 px-2 col-span-3 border-l">Teacher Activity</div><div className="py-3 px-2 col-span-3 border-l">Learner Activity</div>
                                  </div>
-                                    {planForm.watch('activities')?.map((act: any, index: number) => (
+                                    {planForm.watch('activities')?.map((act: { phase: string; teacherActivity: string; learnerActivity: string }, index: number) => (
                                         <div key={index} className="grid grid-cols-7 text-sm border-b last:border-b-0">
                                             <div className="py-4 px-6 font-semibold text-orange-600 bg-orange-50 flex items-start">{isEditing ? <Input {...planForm.register(`activities.${index}.phase`)} /> : act.phase}</div>
                                             <div className="py-4 px-6 col-span-3">{isEditing ? <Textarea className="min-h-[120px]" {...planForm.register(`activities.${index}.teacherActivity`)} /> : <p className="whitespace-pre-wrap">{act.teacherActivity}</p>}</div>

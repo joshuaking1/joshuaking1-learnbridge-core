@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
         }
 
         // Build context from chat history
-        const contextMessages = chatHistory?.map((msg: any) => ({
+        const contextMessages = chatHistory?.map((msg: { sender: string; content: string }) => ({
             role: msg.sender === 'user' ? 'user' : 'assistant',
             content: msg.content
         })) || [];
@@ -76,8 +76,8 @@ Respond as a helpful teaching colleague who understands the Ghanaian educational
 
         return NextResponse.json({ response: aiResponse });
 
-    } catch (error: any) {
-        console.error("Error in chat API:", error.message);
+    } catch (error: unknown) {
+        console.error("Error in chat API:", error instanceof Error ? error.message : 'Unknown error');
         return NextResponse.json({ 
             error: "Failed to process your message. Please try again." 
         }, { status: 500 });

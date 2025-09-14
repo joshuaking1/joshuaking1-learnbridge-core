@@ -25,17 +25,6 @@ const tosSchema = z.object({
     })).min(1, { message: "At least one focal area group is required." })
 });
 
-type TosData = {
-    weekRange: string;
-    focalAreas: string;
-    questionDistribution: {
-        type: string;
-        dok1: number;
-        dok2: number;
-        dok3: number;
-        dok4: number;
-    }[];
-};
 
 export function TosBuilder() {
     const [loading, setLoading] = useState(false);
@@ -149,7 +138,7 @@ export function TosBuilder() {
 
     return (
         <Card>
-            <CardHeader><CardTitle>End of Term ToS Builder</CardTitle><CardDescription>Define your term's focal areas to generate a professional exam blueprint.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>End of Term ToS Builder</CardTitle><CardDescription>Define your term&apos;s focal areas to generate a professional exam blueprint.</CardDescription></CardHeader>
             <CardContent>
                 <form onSubmit={handleSubmit(data => handleGenerate(data, false))} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

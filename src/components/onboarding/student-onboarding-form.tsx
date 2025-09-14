@@ -72,7 +72,7 @@ export function StudentOnboardingForm() {
         <Card>
             <CardHeader>
                 <CardTitle className="text-2xl">Student Onboarding</CardTitle>
-                <CardDescription>Let's get you set up for your personalized learning journey.</CardDescription>
+                <CardDescription>Let&apos;s get you set up for your personalized learning journey.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>

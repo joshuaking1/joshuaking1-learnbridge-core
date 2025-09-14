@@ -2,8 +2,8 @@
 import { create } from 'zustand';
 
 interface TransformedDataState {
-  prefilledData: any | null;
-  setPrefilledData: (data: any) => void;
+  prefilledData: unknown | null;
+  setPrefilledData: (data: unknown) => void;
   clearPrefilledData: () => void;
 }
 
