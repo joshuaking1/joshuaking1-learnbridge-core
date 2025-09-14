@@ -1,26 +1,193 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-brand-primary: #fd6a3e; /* Creativity & Energy */
+  --color-brand-secondary: #022e7d; /* Trust & Intellect */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 0.625rem;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #171717;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #f4f4f5;
+  --accent-foreground: #171717;
+  --destructive: #dc2626;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #a1a1aa;
+  --chart-1: #3b82f6;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #8b5cf6;
+  --sidebar: #fafafa;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #171717;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #171717;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #a1a1aa;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --popover: #171717;
+  --popover-foreground: #fafafa;
+  --primary: #f4f4f5;
+  --primary-foreground: #171717;
+  --secondary: #262626;
+  --secondary-foreground: #fafafa;
+  --muted: #262626;
+  --muted-foreground: #a1a1aa;
+  --accent: #262626;
+  --accent-foreground: #fafafa;
+  --destructive: #ef4444;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.15);
+  --ring: #71717a;
+  --chart-1: #6366f1;
+  --chart-2: #10b981;
+  --chart-3: #f59e0b;
+  --chart-4: #ef4444;
+  --chart-5: #8b5cf6;
+  --sidebar: #171717;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #6366f1;
+  --sidebar-primary-foreground: #fafafa;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #fafafa;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-ring: #71717a;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* PDF Export Styles - Ensure all colors are properly defined */
+.pdf-export {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.pdf-export .text-brand-secondary {
+  color: #022e7d !important;
+}
+
+.pdf-export .text-brand-primary {
+  color: #fd6a3e !important;
+}
+
+.pdf-export .bg-brand-primary {
+  background-color: #fd6a3e !important;
+}
+
+.pdf-export .bg-brand-secondary {
+  background-color: #022e7d !important;
+}
+
+/* Override all Tailwind colors with hex values for PDF export */
+.pdf-export .text-gray-50 { color: #f9fafb !important; }
+.pdf-export .text-gray-100 { color: #f3f4f6 !important; }
+.pdf-export .text-gray-200 { color: #e5e7eb !important; }
+.pdf-export .text-gray-300 { color: #d1d5db !important; }
+.pdf-export .text-gray-400 { color: #9ca3af !important; }
+.pdf-export .text-gray-500 { color: #6b7280 !important; }
+.pdf-export .text-gray-600 { color: #4b5563 !important; }
+.pdf-export .text-gray-700 { color: #374151 !important; }
+.pdf-export .text-gray-800 { color: #1f2937 !important; }
+.pdf-export .text-gray-900 { color: #111827 !important; }
+
+.pdf-export .bg-gray-50 { background-color: #f9fafb !important; }
+.pdf-export .bg-gray-100 { background-color: #f3f4f6 !important; }
+.pdf-export .bg-gray-200 { background-color: #e5e7eb !important; }
+.pdf-export .bg-gray-300 { background-color: #d1d5db !important; }
+.pdf-export .bg-gray-400 { background-color: #9ca3af !important; }
+.pdf-export .bg-gray-500 { background-color: #6b7280 !important; }
+.pdf-export .bg-gray-600 { background-color: #4b5563 !important; }
+.pdf-export .bg-gray-700 { background-color: #374151 !important; }
+.pdf-export .bg-gray-800 { background-color: #1f2937 !important; }
+.pdf-export .bg-gray-900 { background-color: #111827 !important; }
+
+.pdf-export .text-orange-600 { color: #ea580c !important; }
+.pdf-export .text-orange-700 { color: #c2410c !important; }
+.pdf-export .bg-orange-50 { background-color: #fff7ed !important; }
+.pdf-export .bg-orange-100 { background-color: #ffedd5 !important; }
+
+.pdf-export .text-green-500 { color: #22c55e !important; }
+.pdf-export .text-green-600 { color: #16a34a !important; }
+.pdf-export .text-green-700 { color: #15803d !important; }
+.pdf-export .text-green-800 { color: #166534 !important; }
+.pdf-export .bg-green-50 { background-color: #f0fdf4 !important; }
+.pdf-export .bg-green-100 { background-color: #dcfce7 !important; }
+
+.pdf-export .text-red-500 { color: #ef4444 !important; }
+.pdf-export .text-red-600 { color: #dc2626 !important; }
+.pdf-export .text-red-700 { color: #b91c1c !important; }
+.pdf-export .text-red-800 { color: #991b1b !important; }
+.pdf-export .bg-red-50 { background-color: #fef2f2 !important; }
+.pdf-export .bg-red-100 { background-color: #fee2e2 !important; }
+
+/* Override any CSS custom properties that might use unsupported functions */
+.pdf-export * {
+  --color-brand-primary: #fd6a3e !important;
+  --color-brand-secondary: #022e7d !important;
 }
