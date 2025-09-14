@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +19,7 @@ type ModuleContent = {
     reflectionQuiz: { question: string; options: string[] }[];
 };
 
-export default function ModulePage() {
+function ModulePageContent() {
     const searchParams = useSearchParams();
     const [loading, setLoading] = useState(true);
     const [content, setContent] = useState<ModuleContent | null>(null);
@@ -288,5 +288,13 @@ export default function ModulePage() {
                 </CardContent>
             </Card>
         </div>
+    );
+}
+
+export default function ModulePage() {
+    return (
+        <Suspense fallback={<div className="flex h-screen items-center justify-center">Loading module...</div>}>
+            <ModulePageContent />
+        </Suspense>
     );
 }
