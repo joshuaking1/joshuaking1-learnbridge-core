@@ -49,20 +49,24 @@ export function TeacherOnboardingForm({ user, role }: { user: User, role: string
             
             posthog.identify(user.id, { email: user.email, role: role, ...values });
             
+            // **THE FIX: We now UPDATE the profile that the trigger created.**
             const { error } = await supabase
                 .from('profiles')
-                .insert({
-                    id: user.id,
-                    role: role,
-                    updated_at: new Date().toISOString(),
-                    fingerprint: userFingerprint,
-                    ...values
-                });
+                .update({
+                    full_name: values.full_name,
+                    gender: values.gender,
+                    school_name: values.school_name,
+                    district: values.district,
+                    position: values.position,
+                    experience_years: values.experience_years,
+                    // Mark onboarding as complete if you add such a column
+                })
+                .eq('id', user.id); // The WHERE clause
             
             if (error) throw error;
-            
-            toast.success("Onboarding Complete! Redirecting...");
-            router.push(`/${role}`); // Redirect to the appropriate dashboard
+
+            toast.success("Onboarding Complete!");
+            router.push('/teacher');
         } catch (error: any) {
             toast.error("Onboarding Failed", { description: error.message });
         } finally {

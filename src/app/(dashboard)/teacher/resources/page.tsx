@@ -1,160 +1,38 @@
 // src/app/(dashboard)/teacher/resources/page.tsx
-'use client';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { ResourceVaultClient } from '@/components/resources/resource-vault-client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { createClientComponentClient, User } from '@supabase/auth-helpers-nextjs';
-import { toast } from 'sonner';
-import { FileObject } from '@supabase/storage-js';
+export default async function ResourceVaultPage() {
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name: string) {
+                    return cookies().get(name)?.value;
+                },
+            },
+        }
+    );
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) redirect('/auth/login');
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { UploadCloud, File, MoreVertical, Trash2, Download, Loader2 } from 'lucide-react';
-
-export default function ResourceVaultPage() {
-    const supabase = createClientComponentClient();
-    const [user, setUser] = useState<User | null>(null);
-    const [files, setFiles] = useState<FileObject[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-
-    const fetchFiles = useCallback(async (currentUser: User) => {
-        setLoading(true);
-        const { data, error } = await supabase.storage
+    // Fetch initial data on the server
+    const { data: files, error } = await supabase.storage
             .from('teacher-resources')
-            .list(currentUser.id, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+        .list(session.user.id, { sortBy: { column: 'created_at', order: 'desc' } });
 
         if (error) {
-            toast.error(`Failed to fetch files: ${error.message}`);
-        } else {
-            setFiles(data || []);
-        }
-        setLoading(false);
-    }, [supabase]);
-
-    useEffect(() => {
-        const getUserAndFiles = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                setUser(user);
-                fetchFiles(user);
-            } else {
-                setLoading(false); // No user, stop loading
-            }
-        };
-        getUserAndFiles();
-    }, [supabase, fetchFiles]);
-
-    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) setSelectedFile(file);
-    };
-
-    const handleUpload = async () => {
-        if (!selectedFile || !user) { toast.error("Please select a file."); return; }
-        setUploading(true);
-        const filePath = `${user.id}/${Date.now()}-${selectedFile.name}`;
-        const { error } = await supabase.storage.from('teacher-resources').upload(filePath, selectedFile);
-        
-        setUploading(false);
-        if (error) {
-            toast.error(`Upload failed: ${error.message}`);
-        } else {
-            toast.success("File uploaded successfully!");
-            setSelectedFile(null);
-            // Directly add the new file to the state for instant UI update, then re-fetch
-            fetchFiles(user); 
-        }
-    };
-    
-    const handleDownload = async (fileName: string) => {
-        if (!user) return;
-        const filePath = `${user.id}/${fileName}`;
-        const { data, error } = await supabase.storage.from('teacher-resources').download(filePath);
-        
-        if (error) {
-            toast.error(`Download failed: ${error.message || 'Please check permissions.'}`);
-        } else {
-            const blob = new Blob([data]);
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = fileName;
-            document.body.appendChild(a); a.click();
-            window.URL.revokeObjectURL(url); document.body.removeChild(a);
-        }
-    };
-
-    const handleDelete = async (fileName: string) => {
-        if (!user) return;
-        const filePath = `${user.id}/${fileName}`;
-        const { error } = await supabase.storage.from('teacher-resources').remove([filePath]);
-
-        if (error) {
-            // **THIS IS THE CRITICAL FIX FOR THE SILENT DELETE**
-            toast.error(`Delete failed: ${error.message || 'Please check permissions.'}`);
-        } else {
-            toast.success("File deleted successfully!");
-            // **OPTIMISTIC UI UPDATE**
-            // Immediately remove the file from the local state for a snappy user experience.
-            setFiles(currentFiles => currentFiles.filter(f => f.name !== fileName));
-        }
-    };
-    
-    const formatBytes = (bytes: number, decimals = 2) => {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024; const dm = decimals < 0 ? 0 : decimals; const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        // Handle error state gracefully
+        return <div>Error loading resources.</div>
     }
 
+    // Render the Client Component, passing the server-fetched data as props
     return (
         <div className="flex flex-col gap-6">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div><CardTitle>Resource Vault</CardTitle><CardDescription>Manage your teaching materials.</CardDescription></div>
-                    <Dialog onOpenChange={() => setSelectedFile(null)}>
-                        <DialogTrigger asChild><Button disabled={!user}><UploadCloud className="mr-2 h-4 w-4" /> Upload File</Button></DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader><DialogTitle>Upload a New Resource</DialogTitle></DialogHeader>
-                            <div className="space-y-4 py-4">
-                                <div className="space-y-2"><Label htmlFor="resource-file">Choose a file</Label><Input id="resource-file" type="file" onChange={handleFileSelect} /></div>
-                                {selectedFile && <p className="text-sm text-gray-500">Selected: {selectedFile.name}</p>}
-                                <DialogClose asChild><Button onClick={handleUpload} disabled={uploading || !selectedFile} className="w-full">{uploading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Uploading...</> : "Confirm and Upload"}</Button></DialogClose>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
-                </CardHeader>
-                <CardContent>
-                    <Table>
-                        <TableHeader><TableRow><TableHead className="w-[50px]"></TableHead><TableHead>File Name</TableHead><TableHead>Size</TableHead><TableHead>Date Uploaded</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            {loading ? (<TableRow><TableCell colSpan={5} className="text-center"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>) :
-                            !user ? (<TableRow><TableCell colSpan={5} className="text-center text-red-500">Could not authenticate user.</TableCell></TableRow>) :
-                            files.length > 0 ? files.map((file) => (
-                                <TableRow key={file.id}>
-                                    <TableCell><File className="h-5 w-5 text-gray-500" /></TableCell>
-                                    <TableCell className="font-medium">{file.name}</TableCell>
-                                    <TableCell>{formatBytes(file.metadata.size)}</TableCell>
-                                    <TableCell>{new Date(file.created_at).toLocaleDateString()}</TableCell>
-                                    <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuItem onClick={() => handleDownload(file.name)}><Download className="mr-2 h-4 w-4" /> Download</DropdownMenuItem>
-                                                <DropdownMenuItem className="text-red-500" onClick={() => handleDelete(file.name)}><Trash2 className="mr-2 h-4 w-4" /> Delete</DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            )) : (<TableRow><TableCell colSpan={5} className="text-center">You haven&apos;t uploaded any resources yet.</TableCell></TableRow>)}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            <ResourceVaultClient initialFiles={files || []} user={session.user} />
         </div>
     );
 }
