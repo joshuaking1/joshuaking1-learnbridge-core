@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Perform the insert using the server-verified user ID.
-    const { data, error } = await supabaseAdmin
+    const { data, error: insertError } = await supabaseAdmin
         .from('ai_chat_sessions')
         .insert({
             user_id: user.id, // Secure, server-verified ID
@@ -43,9 +43,9 @@ export async function POST(req: NextRequest) {
         .select('id, title, created_at')
         .single();
 
-    if (error) {
-        console.error("Admin Insert Error:", error);
-        return NextResponse.json({ error: "Database error: " + error.message }, { status: 500 });
+    if (insertError) {
+        console.error("Admin Insert Error:", insertError);
+        return NextResponse.json({ error: "Database error: " + insertError.message }, { status: 500 });
     }
 
     return NextResponse.json(data);
