@@ -1,66 +1,77 @@
 // middleware.ts
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req, res });
+  
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => req.cookies.getAll(),
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            res.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+  
   const { data: { session } } = await supabase.auth.getSession();
   
   const { pathname } = req.nextUrl;
 
-  // --- LOGGED-OUT USER ---
-  // If the user is not logged in and trying to access protected routes, redirect to home.
-  if (!session && (pathname.startsWith('/teacher') || pathname.startsWith('/student'))) {
-    return NextResponse.redirect(new URL('/', req.url));
+  // --- Case 1: User is NOT logged in ---
+  // If they try to access any protected route, send them to login.
+  if (!session && (pathname.startsWith('/teacher') || pathname.startsWith('/student') || pathname.startsWith('/onboarding'))) {
+    return NextResponse.redirect(new URL('/auth/login', req.url));
   }
 
-  // --- LOGGED-IN USER ---
+  // --- Case 2: User IS logged in ---
   if (session) {
-    // Fetch profile once for the logged-in user
+    // Fetch the user's profile. This is the crucial check.
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
       .eq('id', session.user.id)
       .single();
-
-    // -- Sub-Case 1: User is logged in but has NOT onboarded (no profile) --
-    if (!profile) {
-      // If they are not on the onboarding page, force them to it.
-      if (!pathname.startsWith('/onboarding')) {
-        // We need to know their role from somewhere. The callback should have set it.
-        // For now, let's just create the URL. The callback will handle setting the `role` param.
-        return NextResponse.redirect(new URL('/onboarding', req.url));
-      }
-    }
-
-    // -- Sub-Case 2: User is logged in AND has onboarded (profile exists) --
-    if (profile) {
-      const userRole = profile.role; // 'teacher' or 'student'
       
-      // If they try to visit the onboarding page, redirect them to their dashboard.
+    // Sub-Case 2a: Logged in, but NO PROFILE (New User)
+    // If they are trying to go anywhere EXCEPT the onboarding page, force them to onboarding.
+    if (!profile && !pathname.startsWith('/onboarding')) {
+      const role = session.user.user_metadata.role || 'student'; // Get role from signup metadata
+      const onboardingUrl = new URL('/onboarding', req.url);
+      onboardingUrl.searchParams.set('role', role);
+      return NextResponse.redirect(onboardingUrl);
+    }
+    
+    // Sub-Case 2b: Logged in, AND HAS PROFILE (Existing User)
+    if (profile) {
+      // If they try to access the onboarding page, send them to their dashboard.
       if (pathname.startsWith('/onboarding')) {
-        return NextResponse.redirect(new URL(`/${userRole}`, req.url));
+        return NextResponse.redirect(new URL(`/${profile.role}`, req.url));
       }
-
-      // If a teacher tries to access a student route, or vice-versa, redirect them correctly.
-      if (userRole === 'teacher' && pathname.startsWith('/student')) {
-        return NextResponse.redirect(new URL('/teacher', req.url));
-      }
-      if (userRole === 'student' && pathname.startsWith('/teacher')) {
+      
+      // If a student tries to access a teacher route (or vice versa), redirect them.
+      if (profile.role === 'student' && pathname.startsWith('/teacher')) {
         return NextResponse.redirect(new URL('/student', req.url));
+      }
+      if (profile.role === 'teacher' && pathname.startsWith('/student')) {
+        return NextResponse.redirect(new URL('/teacher', req.url));
       }
     }
   }
 
-  // If none of the above conditions are met, allow the request to proceed.
   return res;
 }
 
-// Update the matcher to run on all relevant pages.
 export const config = {
   matcher: [
+    // Apply middleware to all key routes
     '/teacher/:path*',
     '/student/:path*',
     '/onboarding',

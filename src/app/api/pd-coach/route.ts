@@ -1,6 +1,6 @@
 // src/app/api/pd-coach/route.ts
 import Groq from 'groq-sdk';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from "next/server";
@@ -59,7 +59,24 @@ RULES:
 
 // GET handler for recommendations
 export async function GET(req: NextRequest) {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name) {
+                    return cookieStore.get(name)?.value;
+                },
+                set(name, value, options) {
+                    cookieStore.set({ name, value, ...options });
+                },
+                remove(name, options) {
+                    cookieStore.delete({ name, ...options });
+                },
+            },
+        }
+    );
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -132,7 +149,24 @@ export async function GET(req: NextRequest) {
 
 // POST handler for modules, quiz generation, and certification
 export async function POST(req: NextRequest) {
-    const supabase = createRouteHandlerClient({ cookies });
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                get(name) {
+                    return cookieStore.get(name)?.value;
+                },
+                set(name, value, options) {
+                    cookieStore.set({ name, value, ...options });
+                },
+                remove(name, options) {
+                    cookieStore.delete({ name, ...options });
+                },
+            },
+        }
+    );
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

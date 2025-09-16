@@ -2,12 +2,12 @@
 'use client';
 
 import { useState, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'; // Import this client
-import { toast } from "sonner"; // CORRECTED IMPORT
+import { createBrowserClient } from '@supabase/ssr';
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,46 +17,48 @@ import { Loader2 } from 'lucide-react';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
+  password: z.string().min(1, { message: "Password is required." }),
 });
 
 function LoginPageContent() {
-  const supabase = createClientComponentClient(); // Use the component client
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
   const searchParams = useSearchParams();
+  const router = useRouter();
   const role = searchParams.get('role') || 'student';
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
 
   const form = useForm<z.infer<typeof loginFormSchema>>({
     resolver: zodResolver(loginFormSchema),
-    defaultValues: { email: "" },
+    defaultValues: { 
+      email: "",
+      password: ""
+    },
   });
 
   async function onSubmit(values: z.infer<typeof loginFormSchema>) {
     setLoading(true);
     try {
-      // *** THE DEFINITIVE FIX IS HERE ***
-      // We are no longer providing emailRedirectTo.
-      // The auth helper's client will automatically construct the correct URL
-      // to our /auth/callback route for a secure server-side code exchange.
-      const { error } = await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
-        options: {
-          // This must match the URL of the page where the sign-in request is made.
-          // It's used by Supabase to prevent phishing attacks.
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+        password: values.password,
       });
-
-      if (error) throw error;
-
-      toast.success("Check your email!", {
-        description: "We've sent a magic link to your email address. Click it to log in.",
-        duration: 5000,
+      
+      if (error) {
+        throw new Error(error.message);
+      }
+      
+      toast.success("Login successful!", {
+        description: "Redirecting to your dashboard...",
+        duration: 3000,
       });
-      setSubmitted(true);
+      
+      router.push('/redirecting');
     } catch (error: any) {
-      toast.error("Error", {
-        description: error.message || "An unexpected error occurred. Please try again.",
+      toast.error("Login Error", {
+        description: error.message || "Invalid email or password. Please try again.",
       });
     } finally {
       setLoading(false);
@@ -75,50 +77,64 @@ function LoginPageContent() {
               Welcome, {role === 'teacher' ? 'Teacher' : 'Student'}!
             </CardTitle>
             <CardDescription className="text-gray-600 text-base">
-              {submitted
-                ? "A login link has been sent. Please check your inbox."
-                : "Enter your email below to receive a magic link to access your account."}
+              Enter your email and password to access your account.
             </CardDescription>
           </CardHeader>
           <CardContent className="px-8 pb-8">
-            {!submitted && (
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField control={form.control} name="email" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-brand-secondary font-medium">Email Address</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="you@example.com" 
-                          className="border-brand-secondary/20 focus:border-brand-primary focus:ring-brand-primary/20" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl" 
-                    disabled={loading}
-                  >
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Send Magic Link
-                  </Button>
-                </form>
-              </Form>
-            )}
-            {submitted && (
-              <div className="text-center py-8">
-                <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <p className="text-brand-secondary font-medium">Check your email!</p>
-                <p className="text-gray-600 text-sm mt-2">We&apos;ve sent a magic link to your email address.</p>
-              </div>
-            )}
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField control={form.control} name="email" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-brand-secondary font-medium">Email Address</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="email"
+                        placeholder="you@example.com" 
+                        className="border-brand-secondary/20 focus:border-brand-primary focus:ring-brand-primary/20" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                
+                <FormField control={form.control} name="password" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-brand-secondary font-medium">Password</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="password"
+                        placeholder="Enter your password" 
+                        className="border-brand-secondary/20 focus:border-brand-primary focus:ring-brand-primary/20" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                
+                <Button 
+                  type="submit" 
+                  className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white font-semibold py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl" 
+                  disabled={loading}
+                >
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Sign In
+                </Button>
+              </form>
+            </Form>
+            
+            <div className="mt-6 text-center">
+              <p className="text-sm text-gray-600">
+                Don't have an account?{' '}
+                <a 
+                  href={`/auth/signup?role=${role}`}
+                  className="text-brand-primary hover:text-brand-primary/80 font-medium"
+                >
+                  Sign up here
+                </a>
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

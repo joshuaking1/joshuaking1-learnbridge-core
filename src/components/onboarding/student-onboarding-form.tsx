@@ -4,8 +4,9 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { supabase } from '@/lib/supabase';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { createBrowserClient } from '@supabase/ssr';
+import { useRouter } from 'next/navigation';
+import { User } from '@supabase/auth-helpers-nextjs';
 import posthog from 'posthog-js';
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -28,10 +29,12 @@ const studentFormSchema = z.object({
     student_class: z.string().min(1, { message: "Your class is required (e.g., JHS 1, SHS 2)." }),
 });
 
-export function StudentOnboardingForm() {
+export function StudentOnboardingForm({ user, role }: { user: User, role: string }) {
+    const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const role = searchParams.get('role');
     const [loading, setLoading] = useState(false);
 
     const form = useForm<z.infer<typeof studentFormSchema>>({
@@ -42,25 +45,24 @@ export function StudentOnboardingForm() {
     async function onSubmit(values: z.infer<typeof studentFormSchema>) {
         setLoading(true);
         try {
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            if (userError || !user) throw new Error("User not found. Please log in again.");
-
+            const userFingerprint = user.user_metadata?.fingerprint;
+            
             posthog.identify(user.id, { email: user.email, role: role, ...values });
             
-            const { error: profileError } = await supabase.from('profiles').upsert({
-                id: user.id,
-                role: role,
-                updated_at: new Date().toISOString(),
-                ...values
-            });
+            const { error } = await supabase
+                .from('profiles')
+                .insert({
+                    id: user.id,
+                    role: role,
+                    updated_at: new Date().toISOString(),
+                    fingerprint: userFingerprint,
+                    ...values
+                });
             
-            if(profileError) throw profileError;
-
-            toast.success("Onboarding Complete!", {
-                description: "Welcome to LearnBridgeEdu! Your learning adventure begins now.",
-            });
-
-            router.push('/student'); // Redirect to student dashboard
+            if (error) throw error;
+            
+            toast.success("Onboarding Complete! Redirecting...");
+            router.push(`/${role}`); // Redirect to the appropriate dashboard
         } catch (error: any) {
             toast.error("Onboarding Failed", { description: error.message });
         } finally {
