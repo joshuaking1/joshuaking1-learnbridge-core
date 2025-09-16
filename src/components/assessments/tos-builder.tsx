@@ -115,7 +115,7 @@ export function TosBuilder() {
         });
         
         // Add verification footer with QR code
-        const verificationUrl = `${window.location.origin}/verify/tos?id=${generatedData.tosId}`;
+        const verificationUrl = `https://beta.learnbridgedu.com/verify/tos?id=${generatedData.tosId}`;
         const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, { width: 20, margin: 1 });
         const finalY = (doc as any).lastAutoTable.finalY || 200;
         doc.addImage(qrCodeDataUrl, 'PNG', 15, finalY + 5);

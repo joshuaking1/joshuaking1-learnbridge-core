@@ -93,7 +93,7 @@ export function RubricGenerator() {
             headStyles: { fillColor: [2, 46, 125] }
         });
         
-        const verificationUrl = `${window.location.origin}/verify/rubric?id=${generatedData.rubricId}`;
+        const verificationUrl = `https://beta.learnbridgedu.com/verify/rubric?id=${generatedData.rubricId}`;
         const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, { width: 20, margin: 1 });
         const finalY = (doc as any).lastAutoTable.finalY || 200; // Fallback Y position
         doc.addImage(qrCodeDataUrl, 'PNG', 15, finalY + 5);

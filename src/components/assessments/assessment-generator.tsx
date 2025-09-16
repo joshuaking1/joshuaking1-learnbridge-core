@@ -118,7 +118,7 @@ export function AssessmentGenerator() {
         });
         
         // Footer & QR Code
-        const verificationUrl = `https://www.learnbridgeedu.com/verify?id=${generatedData.assessmentId}`;
+        const verificationUrl = `https://beta.learnbridgedu.com/verify?id=${generatedData.assessmentId}`;
         const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl);
         doc.addImage(qrCodeDataUrl, 'PNG', 15, 270, 25, 25);
         doc.setFontSize(8);

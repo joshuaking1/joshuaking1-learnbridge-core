@@ -11,45 +11,48 @@ export async function POST(req: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                get(name) {
+                get(name: string) {
                     return cookieStore.get(name)?.value;
                 },
-                set(name, value, options) {
+                set(name: string, value: string, options: any) {
                     cookieStore.set({ name, value, ...options });
                 },
-                remove(name, options) {
+                remove(name: string, options: any) {
                     cookieStore.delete({ name, ...options });
                 },
             },
         }
     );
-    const { data: { session } } = await supabase.auth.getSession();
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (authError || !user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     try {
         const planData = await req.json();
 
-        // Extract metadata for top-level columns
         const { subject, grade, week } = planData.userInput;
         
+        // **THE DEFINITIVE FIX IS HERE**
+        // The column is 'author_id', not 'user_id'.
         const { data, error } = await supabase
             .from('lesson_plans')
             .insert({
-                user_id: session.user.id,
+                author_id: user.id, // CORRECTED COLUMN NAME
                 plan_data: planData,
                 subject,
                 grade,
                 week
             })
-            .select('id') // Return the ID of the newly created plan
+            .select('id')
             .single();
 
         if (error) throw error;
         
-        return NextResponse.json({ id: data.id });
+        // Return the plan data along with the new ID
+        return NextResponse.json({ id: data.id, planData });
 
     } catch (error: any) {
         console.error("Error saving lesson plan:", error.message);
@@ -66,21 +69,22 @@ export async function PATCH(req: NextRequest) {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                get(name) {
+                get(name: string) {
                     return cookieStore.get(name)?.value;
                 },
-                set(name, value, options) {
+                set(name: string, value: string, options: any) {
                     cookieStore.set({ name, value, ...options });
                 },
-                remove(name, options) {
+                remove(name: string, options: any) {
                     cookieStore.delete({ name, ...options });
                 },
             },
         }
     );
-    const { data: { session } } = await supabase.auth.getSession();
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    if (!session) {
+    if (authError || !user) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -95,10 +99,10 @@ export async function PATCH(req: NextRequest) {
             .from('lesson_plans')
             .update({
                 plan_data: planData,
-                updated_at: new Date().toISOString(), // Manually update the timestamp
+                updated_at: new Date().toISOString(),
             })
             .eq('id', planId)
-            .eq('user_id', session.user.id); // Ensure user can only update their own plans
+            .eq('author_id', user.id); // Also ensure this uses the correct column name
 
         if (error) throw error;
         

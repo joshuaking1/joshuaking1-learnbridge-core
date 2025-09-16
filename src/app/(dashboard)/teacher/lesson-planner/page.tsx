@@ -139,7 +139,7 @@ export default function LessonPlannerPage() {
             // *** NEW: Create a second page for verification ***
             pdf.addPage();
             
-            const verificationUrl = `${window.location.origin}/verify/lesson?id=${activePlanId}`;
+            const verificationUrl = `https://beta.learnbridgedu.com/verify/lesson?id=${activePlanId}`;
             try {
                 // Generate QR code
                 const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl, { 
