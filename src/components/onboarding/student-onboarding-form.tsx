@@ -42,15 +42,10 @@ export function StudentOnboardingForm({ user, role }: { user: User, role: string
         defaultValues: { full_name: "", gender: undefined, school_name: "", student_class: "" },
     });
 
-    async function onSubmit(values: z.infer<typeof studentFormSchema>) {
+    async function onSubmit(values: any) {
         setLoading(true);
         try {
-            const userFingerprint = user.user_metadata?.fingerprint;
-            
-            posthog.identify(user.id, { email: user.email, role: role, ...values });
-            
-            // **THE FIX: We now UPDATE the profile that the trigger created.**
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('profiles')
                 .update({
                     full_name: values.full_name,
@@ -59,12 +54,22 @@ export function StudentOnboardingForm({ user, role }: { user: User, role: string
                     school_name: values.school_name,
                     student_class: values.student_class,
                 })
-                .eq('id', user.id);
+                .eq('id', user.id)
+                .select() // **CRITICAL: Ask Supabase to return the updated data**
             
             if (error) throw error;
+
+            // **CRITICAL: Check if the update actually happened**
+            if (!data || data.length === 0) {
+                throw new Error("Database update failed. The user profile could not be found or updated.");
+            }
+
+            toast.success("Onboarding Complete! Redirecting...");
             
-            toast.success("Onboarding Complete!");
+            // Force a page reload to ensure all server components re-fetch the new data
+            router.refresh(); 
             router.push('/student');
+
         } catch (error: any) {
             toast.error("Onboarding Failed", { description: error.message });
         } finally {

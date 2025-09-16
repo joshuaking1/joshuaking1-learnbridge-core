@@ -42,15 +42,10 @@ export function TeacherOnboardingForm({ user, role }: { user: User, role: string
         defaultValues: { full_name: "", gender: undefined, school_name: "", district: "", position: "", experience_years: 0 },
     });
 
-    async function onSubmit(values: z.infer<typeof teacherFormSchema>) {
+    async function onSubmit(values: any) {
         setLoading(true);
         try {
-            const userFingerprint = user.user_metadata?.fingerprint;
-            
-            posthog.identify(user.id, { email: user.email, role: role, ...values });
-            
-            // **THE FIX: We now UPDATE the profile that the trigger created.**
-            const { error } = await supabase
+            const { data, error } = await supabase
                 .from('profiles')
                 .update({
                     full_name: values.full_name,
@@ -59,14 +54,23 @@ export function TeacherOnboardingForm({ user, role }: { user: User, role: string
                     district: values.district,
                     position: values.position,
                     experience_years: values.experience_years,
-                    // Mark onboarding as complete if you add such a column
                 })
-                .eq('id', user.id); // The WHERE clause
+                .eq('id', user.id)
+                .select() // **CRITICAL: Ask Supabase to return the updated data**
             
             if (error) throw error;
 
-            toast.success("Onboarding Complete!");
+            // **CRITICAL: Check if the update actually happened**
+            if (!data || data.length === 0) {
+                throw new Error("Database update failed. The user profile could not be found or updated.");
+            }
+
+            toast.success("Onboarding Complete! Redirecting...");
+            
+            // Force a page reload to ensure all server components re-fetch the new data
+            router.refresh(); 
             router.push('/teacher');
+
         } catch (error: any) {
             toast.error("Onboarding Failed", { description: error.message });
         } finally {
