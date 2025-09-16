@@ -11,6 +11,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "LearnBridgeEdu - AI-Powered Learning for Ghana's SBC",
   description: "Transforming how KG–SHS students learn, collaborate, and grow with personalized learning, social connection, and deep engagement.",
+  icons: {
+    icon: '/LearnBridge logo FAVICON.png',
+    shortcut: '/LearnBridge logo FAVICON.png',
+    apple: '/LearnBridge logo FAVICON.png',
+  },
 };
 
 export default function RootLayout({

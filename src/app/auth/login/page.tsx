@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2 } from 'lucide-react';
+import Image from 'next/image';
 
 const loginFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -70,8 +70,14 @@ function LoginPageContent() {
       <div className="w-full max-w-md mx-4">
         <Card className="shadow-2xl border-0 bg-white/95 backdrop-blur-sm">
           <CardHeader className="text-center space-y-4 pb-8">
-            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center">
-              <span className="text-2xl font-bold text-white">LB</span>
+            <div className="mx-auto w-16 h-16 bg-gradient-to-br from-brand-primary to-brand-secondary rounded-full flex items-center justify-center p-2">
+              <Image 
+                src="/LearnBridge logo inverted croped.png" 
+                alt="LearnBridge Logo" 
+                width={48} 
+                height={48} 
+                className="object-contain"
+              />
             </div>
             <CardTitle className="text-3xl font-bold text-brand-secondary">
               Welcome, {role === 'teacher' ? 'Teacher' : 'Student'}!

@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { Bot, LayoutDashboard, BookText, FileText, Library, LineChart, BarChart, MessageSquare } from 'lucide-react';
+import Image from 'next/image';
+import { LayoutDashboard, BookText, FileText, Library, LineChart, BarChart, MessageSquare, Bot } from 'lucide-react';
 import { UserNav } from '@/components/shared/user-nav'; // We will create this component next
 
 export default async function TeacherDashboardLayout({
@@ -62,7 +63,13 @@ export default async function TeacherDashboardLayout({
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-[60px] items-center border-b px-6">
                         <Link className="flex items-center gap-2 font-semibold" href="/teacher">
-                            <Bot className="h-6 w-6 text-brand-primary" />
+                            <Image 
+                                src="/LearnBridge logo FAVICON.png" 
+                                alt="LearnBridge Logo" 
+                                width={24} 
+                                height={24} 
+                                className="object-contain"
+                            />
                             <span className="">LearnBridgeEdu</span>
                         </Link>
                     </div>

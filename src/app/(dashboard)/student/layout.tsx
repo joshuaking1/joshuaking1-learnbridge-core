@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { LayoutDashboard, Swords, Trophy, Bot, User } from 'lucide-react';
+import Image from 'next/image';
+import { LayoutDashboard, Swords, Trophy, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { UserNav } from '@/components/shared/user-nav'; // Re-using our UserNav component
@@ -61,7 +62,13 @@ export default async function StudentDashboardLayout({
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-[60px] items-center border-b px-6">
                         <Link className="flex items-center gap-2 font-semibold" href="/student">
-                            <Bot className="h-6 w-6 text-brand-primary" />
+                            <Image 
+                                src="/LearnBridge logo inverted croped.png" 
+                                alt="LearnBridge Logo" 
+                                width={24} 
+                                height={24} 
+                                className="object-contain"
+                            />
                             <span className="">LearnBridgeEdu</span>
                         </Link>
                     </div>
