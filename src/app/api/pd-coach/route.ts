@@ -227,40 +227,32 @@ export async function POST(req: NextRequest) {
                     .insert({ user_id: session.user.id, module_title: moduleTitle })
                     .select('id')
                     .single();
+                if (completionError) throw new Error("Failed to record module completion. Perhaps it's already completed?");
 
-                if (completionError) {
-                    console.error("Error recording completion:", completionError);
-                    throw new Error("Failed to record module completion. Perhaps it's already completed?");
-                }
-
-                // 2. Fetch user's name for the certificate
-                const { data: profile } = await supabase
+                // **THE FIX IS HERE**
+                // 2. Fetch user's name for the certificate using the ADMIN client for reliability
+                const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+                const { data: profile } = await supabaseAdmin
                     .from('profiles')
                     .select('full_name')
                     .eq('id', session.user.id)
                     .single();
+                
+                // If profile or full_name is missing, we use a fallback, but it should be present.
+                const userNameForCert = profile?.full_name || session.user.email || 'Valued Educator';
 
                 // 3. Create certificate (using service role key for insert)
-                const supabaseAdmin = createClient(
-                    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                    process.env.SUPABASE_SERVICE_ROLE_KEY!
-                );
-
                 const { data: certificate, error: certError } = await supabaseAdmin
                     .from('pd_certificates')
                     .insert({
                         completion_id: completion.id,
                         user_id: session.user.id,
-                        user_name: profile?.full_name || 'Valued Educator',
+                        user_name: userNameForCert, // Use the fetched or fallback name
                         module_title: moduleTitle,
                     })
                     .select('id')
                     .single();
-
-                if (certError) {
-                    console.error("Error creating certificate:", certError);
-                    throw new Error("Failed to issue certificate.");
-                }
+                if (certError) throw new Error("Failed to issue certificate.");
                 
                 return NextResponse.json({ certificateId: certificate.id });
             }
