@@ -24,10 +24,13 @@ export async function middleware(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession();
   
   const { pathname } = req.nextUrl;
+  
+  console.log('Middleware running for:', pathname, 'Session exists:', !!session);
 
   // --- Case 1: User is NOT logged in ---
   // If they try to access any protected route, send them to login.
-  if (!session && (pathname.startsWith('/teacher') || pathname.startsWith('/student') || pathname.startsWith('/onboarding'))) {
+  if (!session && (pathname.startsWith('/teacher') || pathname.startsWith('/student') || pathname.startsWith('/onboarding') || pathname.startsWith('/admin'))) {
+    console.log('Redirecting to login for:', pathname);
     return NextResponse.redirect(new URL('/auth/login', req.url));
   }
 
@@ -36,7 +39,7 @@ export async function middleware(req: NextRequest) {
     // Fetch the user's profile. This is the crucial check.
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role')
+      .select('role, platform_role')
       .eq('id', session.user.id)
       .single();
       
@@ -54,6 +57,13 @@ export async function middleware(req: NextRequest) {
       // If they try to access the onboarding page, send them to their dashboard.
       if (pathname.startsWith('/onboarding')) {
         return NextResponse.redirect(new URL(`/${profile.role}`, req.url));
+      }
+      
+      // Admin route protection - only SUPER_ADMIN can access /admin routes
+      if (pathname.startsWith('/admin')) {
+        if (profile.platform_role !== 'SUPER_ADMIN') {
+          return NextResponse.redirect(new URL('/', req.url));
+        }
       }
       
       // If a student tries to access a teacher route (or vice versa), redirect them.
@@ -75,5 +85,6 @@ export const config = {
     '/teacher/:path*',
     '/student/:path*',
     '/onboarding',
+    '/admin/:path*',
   ],
 };
