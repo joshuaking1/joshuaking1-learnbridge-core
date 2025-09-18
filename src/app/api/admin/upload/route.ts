@@ -5,25 +5,14 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
-    // 1. Verify the user is a Super Admin
+    const cookieStore = cookies();
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                getAll() {
-                    return cookies().getAll();
-                },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookies().set(name, value, options)
-                        );
-                    } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
-                    }
+                get(name: string) {
+                    return cookieStore.get(name)?.value;
                 },
             },
         }
@@ -36,46 +25,17 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // 2. Get the file and metadata from the request body
     const formData = await req.formData();
-    const file = formData.get('file') as File | null;
-    const subjectTag = formData.get('subjectTag') as string | null;
+    const file = formData.get('file') as File;
+    const subjectTag = formData.get('subjectTag') as string;
 
-    if (!file || !subjectTag) {
-        return NextResponse.json({ error: 'File and subjectTag are required.' }, { status: 400 });
-    }
-
-    // 3. Create the ADMIN client that can bypass RLS
-    const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
-
-    // 4. Use the ADMIN client to upload the file to storage
+    const supabaseAdmin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const filePath = `curriculum/${Date.now()}-${file.name}`;
-    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
-        .from('curriculum-private') // Use the correct, secure bucket
-        .upload(filePath, file);
+    const { data: uploadData, error: uploadError } = await supabaseAdmin.storage.from('curriculum-private').upload(filePath, file);
+    if (uploadError) return NextResponse.json({ error: `Storage Error: ${uploadError.message}` }, { status: 500 });
 
-    if (uploadError) {
-        return NextResponse.json({ error: `Storage Error: ${uploadError.message}` }, { status: 500 });
-    }
-
-    // 5. Use the ADMIN client to create the database record
-    const { data, error: dbError } = await supabaseAdmin
-        .from('curriculum_documents')
-        .insert({
-            file_name: file.name,
-            subject_tag: subjectTag,
-            storage_path: uploadData.path,
-        })
-        .select()
-        .single();
-
-    if (dbError) {
-        return NextResponse.json({ error: "Database record failed: " + dbError.message }, { status: 500 });
-    }
+    const { data, error: dbError } = await supabaseAdmin.from('curriculum_documents').insert({ file_name: file.name, subject_tag: subjectTag, storage_path: uploadData.path }).select().single();
+    if (dbError) return NextResponse.json({ error: "DB Error: " + dbError.message }, { status: 500 });
 
     return NextResponse.json(data);
 }
-

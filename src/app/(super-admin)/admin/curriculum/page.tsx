@@ -4,32 +4,23 @@ import { cookies } from 'next/headers';
 import { CurriculumClient } from '@/components/admin/curriculum-client';
 
 export default async function CurriculumPage() {
+    const cookieStore = cookies();
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                getAll() {
-                    return cookies().getAll();
-                },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookies().set(name, value, options)
-                        );
-                    } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
-                    }
+                get(name: string) {
+                    return cookieStore.get(name)?.value;
                 },
             },
         }
     );
     
+    // **THE FIX: Select ALL columns needed by the client**
     const { data: documents } = await supabase
         .from('curriculum_documents')
-        .select('*')
+        .select('id, file_name, subject_tag, processing_status, uploaded_at, storage_path')
         .order('uploaded_at', { ascending: false });
 
     return <CurriculumClient initialDocuments={documents || []} />;
