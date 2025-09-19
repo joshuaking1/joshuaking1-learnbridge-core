@@ -125,6 +125,46 @@
 /* PDF Export Styles - Ensure all colors are properly defined */
 .pdf-export {
   background-color: #ffffff !important;
+}
+
+/* Mobile responsive table styles */
+@media (max-width: 768px) {
+  .responsive-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  
+  .responsive-table table {
+    min-width: 100%;
+  }
+  
+  .responsive-table th,
+  .responsive-table td {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Mobile form improvements */
+@media (max-width: 640px) {
+  .mobile-form-stack {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .mobile-form-stack > * {
+    width: 100%;
+  }
+  
+  .mobile-hidden {
+    display: none;
+  }
+  
+  .mobile-text-sm {
+    font-size: 0.875rem;
+  }
+}
   color: #000000 !important;
 }
 

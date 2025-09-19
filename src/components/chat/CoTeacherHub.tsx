@@ -83,15 +83,39 @@ export function CoTeacherHub({ initialSessions, initialPersonas, user }: { initi
     };
     
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-4rem)]">
-            {/* Sidebar for Sessions and Personas */}
-            <div className="lg:col-span-1 flex flex-col gap-4">
-                <Button onClick={handleNewChat} size="lg"><PlusCircle /> New Chat Session</Button>
+        <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6 h-[calc(100vh-4rem)]">
+            {/* Mobile Sessions Selector */}
+            <div className="lg:hidden">
+                <div className="flex gap-2 mb-4">
+                    <Button onClick={handleNewChat} size="sm" className="flex-1">
+                        <PlusCircle className="h-4 w-4 mr-2" /> New Chat
+                    </Button>
+                    <select 
+                        value={activeSession?.id || ''} 
+                        onChange={(e) => {
+                            const session = sessions.find(s => s.id === e.target.value);
+                            if (session) setActiveSession(session);
+                        }}
+                        className="flex-1 px-3 py-2 border rounded-md text-sm"
+                    >
+                        <option value="">Select a session...</option>
+                        {sessions.map(session => (
+                            <option key={session.id} value={session.id}>
+                                {session.title.length > 30 ? session.title.substring(0, 30) + '...' : session.title}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            {/* Desktop Sidebar for Sessions */}
+            <div className="hidden lg:flex lg:col-span-1 flex-col gap-4">
+                <Button onClick={handleNewChat} size="lg"><PlusCircle className="mr-2" /> New Chat Session</Button>
                 <Card className="flex-1 flex flex-col">
                     <CardHeader><CardTitle>My Sessions</CardTitle></CardHeader>
                     <CardContent className="flex-1 overflow-auto">
                         {sessions.map(session => (
-                            <div key={session.id} onClick={() => setActiveSession(session)} className={`p-2 rounded-md cursor-pointer ${activeSession?.id === session.id ? 'bg-blue-100' : 'hover:bg-gray-50'}`}>
+                            <div key={session.id} onClick={() => setActiveSession(session)} className={`p-2 rounded-md cursor-pointer transition-colors ${activeSession?.id === session.id ? 'bg-blue-100' : 'hover:bg-gray-50'}`}>
                                 {session.title}
                             </div>
                         ))}
@@ -100,41 +124,63 @@ export function CoTeacherHub({ initialSessions, initialPersonas, user }: { initi
             </div>
 
             {/* Main Chat Window */}
-            <div className="lg:col-span-3 flex flex-col bg-white rounded-lg border">
+            <div className="flex-1 lg:col-span-3 flex flex-col bg-white rounded-lg border min-h-0">
                 {activeSession ? (
                     <>
-                        <div className="flex items-center justify-between p-4 border-b">
-                            <h2 className="text-lg font-bold">{activeSession.title}</h2>
-                            {/* ... Buttons for Create Lesson Plan etc. would go here ... */}
+                        <div className="flex items-center justify-between p-3 lg:p-4 border-b">
+                            <h2 className="text-base lg:text-lg font-bold truncate pr-2">{activeSession.title}</h2>
+                            {/* Action buttons would go here */}
                         </div>
-                        <ScrollArea className="flex-1 p-4">
-                            <div className="space-y-6">
+                        <ScrollArea className="flex-1 p-3 lg:p-4 min-h-0">
+                            <div className="space-y-4 lg:space-y-6">
                                 {messages.map(m => (
-                                    <div key={m.id} className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : ''}`}>
-                                        {m.role === 'assistant' && <Avatar><AvatarFallback>AI</AvatarFallback></Avatar>}
-                                        <div className={`p-3 rounded-lg max-w-xl prose ${m.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100'}`}>
-                                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                                    <div key={m.id} className={`flex gap-2 lg:gap-3 ${m.role === 'user' ? 'justify-end' : ''}`}>
+                                        {m.role === 'assistant' && (
+                                            <Avatar className="h-8 w-8 lg:h-10 lg:w-10 flex-shrink-0">
+                                                <AvatarFallback className="text-xs lg:text-sm">AI</AvatarFallback>
+                                            </Avatar>
+                                        )}
+                                        <div className={`p-2 lg:p-3 rounded-lg max-w-[85%] lg:max-w-xl prose prose-sm lg:prose ${m.role === 'user' ? 'bg-blue-500 text-white prose-invert' : 'bg-gray-100'}`}>
+                                            <ReactMarkdown remarkPlugins={[remarkGfm]} className="text-sm lg:text-base">{m.content}</ReactMarkdown>
                                         </div>
-                                        {m.role === 'user' && <Avatar><AvatarFallback>{user.email?.substring(0,2).toUpperCase()}</AvatarFallback></Avatar>}
+                                        {m.role === 'user' && (
+                                            <Avatar className="h-8 w-8 lg:h-10 lg:w-10 flex-shrink-0">
+                                                <AvatarFallback className="text-xs lg:text-sm">{user.email?.substring(0,2).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                        )}
                                     </div>
                                 ))}
                             </div>
                         </ScrollArea>
-                        <div className="p-4 border-t">
+                        <div className="p-3 lg:p-4 border-t">
                             <form onSubmit={handleSubmit}>
                                 <div className="relative">
-                                    <Input value={input} onChange={handleInputChange} placeholder="Ask your Co-Teacher anything..." className="pr-24" />
-                                    <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-2">
-                                        {isLoading && <Button type="button" size="sm" variant="outline" onClick={stop}><Square className="h-4 w-4 mr-2" /> Stop</Button>}
-                                        <Button type="submit" size="sm" disabled={isLoading}>Send</Button>
+                                    <Input 
+                                        value={input} 
+                                        onChange={handleInputChange} 
+                                        placeholder="Ask your Co-Teacher anything..." 
+                                        className="pr-16 lg:pr-24" 
+                                    />
+                                    <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-1 lg:gap-2">
+                                        {isLoading && (
+                                            <Button type="button" size="sm" variant="outline" onClick={stop} className="px-2 lg:px-3">
+                                                <Square className="h-3 w-3 lg:h-4 lg:w-4 lg:mr-2" />
+                                                <span className="hidden lg:inline">Stop</span>
+                                            </Button>
+                                        )}
+                                        <Button type="submit" size="sm" disabled={isLoading} className="px-2 lg:px-3">
+                                            <Send className="h-3 w-3 lg:h-4 lg:w-4" />
+                                            <span className="hidden lg:inline lg:ml-2">Send</span>
+                                        </Button>
                                     </div>
                                 </div>
                             </form>
                         </div>
                     </>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full">
-                        <p>Select a session or create a new one to begin.</p>
+                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                        <Bot className="h-12 w-12 lg:h-16 lg:w-16 text-gray-400 mb-4" />
+                        <p className="text-sm lg:text-base text-gray-600">Select a session or create a new one to begin chatting with your AI Co-Teacher.</p>
                     </div>
                 )}
             </div>

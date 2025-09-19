@@ -6,28 +6,25 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { Shield, Home, Users, MessageSquare, BookCopy, Cpu, Swords } from 'lucide-react';
 import { UserNav } from '@/components/shared/user-nav';
+import { MobileSidebar } from '@/components/shared/mobile-sidebar';
 
 // Note: The middleware already protects this layout, but we re-fetch the
 // session and profile here to pass data to components like UserNav.
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+    const cookieStore = await cookies();
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
         {
             cookies: {
-                getAll() {
-                    return cookies().getAll();
+                get(name) {
+                    return cookieStore.get(name)?.value;
                 },
-                setAll(cookiesToSet) {
-                    try {
-                        cookiesToSet.forEach(({ name, value, options }) =>
-                            cookies().set(name, value, options)
-                        );
-                    } catch {
-                        // The `setAll` method was called from a Server Component.
-                        // This can be ignored if you have middleware refreshing
-                        // user sessions.
-                    }
+                set(name, value, options) {
+                    cookieStore.set({ name, value, ...options });
+                },
+                remove(name, options) {
+                    cookieStore.delete({ name, ...options });
                 },
             },
         }
@@ -50,13 +47,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/quests", label: "Quest Authoring", icon: Swords },
     ];
 
+    const logoElement = (
+        <Shield className="h-6 w-6 text-brand-primary" />
+    );
+
     return (
         <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+            {/* Desktop Sidebar */}
             <div className="hidden border-r bg-gray-900 text-white lg:block">
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-[60px] items-center border-b border-gray-700 px-6">
                         <Link className="flex items-center gap-2 font-semibold" href="/admin">
-                            <Shield className="h-6 w-6 text-brand-primary" />
+                            {logoElement}
                             <span>Super Admin</span>
                         </Link>
                     </div>
@@ -72,14 +74,24 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     </div>
                 </div>
             </div>
+            
+            {/* Main Content */}
             <div className="flex flex-col">
-                <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100 px-6">
-                    <div className="w-full flex-1">
-                        <h1 className="text-lg font-semibold">LearnBridgeEdu Command Center</h1>
+                <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100 px-4 lg:px-6">
+                    {/* Mobile Sidebar */}
+                    <MobileSidebar 
+                        navLinks={navLinks} 
+                        title="Super Admin"
+                        logo={logoElement}
+                    />
+                    
+                    <div className="flex-1">
+                        <h1 className="text-lg font-semibold hidden sm:block">LearnBridgeEdu Command Center</h1>
+                        <h1 className="text-base font-semibold sm:hidden">Command Center</h1>
                     </div>
                     <UserNav userEmail={session.user.email} userName={profile?.full_name} />
                 </header>
-                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50">
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50 overflow-auto">
                     {children}
                 </main>
             </div>

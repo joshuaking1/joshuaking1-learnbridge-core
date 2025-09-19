@@ -16,6 +16,11 @@ export const metadata: Metadata = {
     shortcut: '/LearnBridge logo FAVICON.png',
     apple: '/LearnBridge logo FAVICON.png',
   },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+  },
 };
 
 export default function RootLayout({

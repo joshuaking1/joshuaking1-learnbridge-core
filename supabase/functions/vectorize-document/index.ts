@@ -32,7 +32,7 @@ async function embedWithHuggingFace(chunks: string[]): Promise<number[][]> {
   const res = await fetch(HF_MODEL_URL, {
     method: 'POST',
     headers: { Authorization: `Bearer ${HF_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ inputs: chunks })
+    body: JSON.stringify({ sentences: chunks })
   });
   if (!res.ok) throw new Error(`HF failed: ${await res.text()}`);
   return await res.json();
@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
       .createSignedUrl(storagePath, 60);
     if (urlError) throw urlError;
 
-    // 2. Extract text with PDF.co (reliable, no workers needed)
+    // 2. Extract text with PDF.co (paid service)
     const pdfcoResponse = await fetch('https://api.pdf.co/v1/pdf/convert/to/text-simple', {
       method: 'POST',
       headers: { 

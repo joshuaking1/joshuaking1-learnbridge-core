@@ -5,10 +5,11 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
-import { LayoutDashboard, Swords, Trophy, User } from 'lucide-react';
+import { LayoutDashboard, Swords, Trophy, User, Bot } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { UserNav } from '@/components/shared/user-nav'; // Re-using our UserNav component
+import { MobileSidebar } from '@/components/shared/mobile-sidebar';
 
 export default async function StudentDashboardLayout({
     children,
@@ -56,31 +57,44 @@ export default async function StudentDashboardLayout({
     const xpForNextLevel = (profile?.level || 1) * 100;
     const xpProgress = ((profile?.xp || 0) / xpForNextLevel) * 100;
 
+    const studentProfileCard = (
+        <div className="px-4 py-6 text-center">
+            <Avatar className="h-16 w-16 lg:h-20 lg:w-20 mx-auto mb-2">
+                <AvatarImage src="/placeholder-user.jpg" />
+                <AvatarFallback>{profile?.full_name?.substring(0,2) || 'S'}</AvatarFallback>
+            </Avatar>
+            <h3 className="font-semibold text-base lg:text-lg">{profile?.full_name}</h3>
+            <p className="text-sm text-gray-500">Rank: Scholar (Level {profile?.level})</p>
+            <div className="px-2 lg:px-4 mt-4">
+                <Progress value={xpProgress} className="h-2" />
+                <p className="text-xs text-gray-500 mt-1">{profile?.xp} / {xpForNextLevel} XP</p>
+            </div>
+        </div>
+    );
+
+    const logoElement = (
+        <Image 
+            src="/LearnBridge logo inverted croped.png" 
+            alt="LearnBridge Logo" 
+            width={24} 
+            height={24} 
+            className="object-contain"
+        />
+    );
+
     return (
         <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+            {/* Desktop Sidebar */}
             <div className="hidden border-r bg-gray-100/40 lg:block dark:bg-gray-800/40">
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-[60px] items-center border-b px-6">
                         <Link className="flex items-center gap-2 font-semibold" href="/student">
-                            <Image 
-                                src="/LearnBridge logo inverted croped.png" 
-                                alt="LearnBridge Logo" 
-                                width={24} 
-                                height={24} 
-                                className="object-contain"
-                            />
+                            {logoElement}
                             <span className="">LearnBridgeEdu</span>
                         </Link>
                     </div>
-                    {/* Student Profile Card */}
-                    <div className="px-4 py-6 text-center border-b">
-                        <Avatar className="h-20 w-20 mx-auto mb-2"><AvatarImage src="/placeholder-user.jpg" /><AvatarFallback>{profile?.full_name?.substring(0,2) || 'S'}</AvatarFallback></Avatar>
-                        <h3 className="font-semibold text-lg">{profile?.full_name}</h3>
-                        <p className="text-sm text-gray-500">Rank: Scholar (Level {profile?.level})</p>
-                        <div className="px-4 mt-4">
-                            <Progress value={xpProgress} className="h-2" />
-                            <p className="text-xs text-gray-500 mt-1">{profile?.xp} / {xpForNextLevel} XP</p>
-                        </div>
+                    <div className="border-b">
+                        {studentProfileCard}
                     </div>
                     <div className="flex-1 overflow-auto">
                         <nav className="flex flex-col gap-2 px-2 py-4">
@@ -94,12 +108,23 @@ export default async function StudentDashboardLayout({
                     </div>
                 </div>
             </div>
+            
+            {/* Main Content */}
             <div className="flex flex-col">
-                <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100/40 px-6">
-                    <div className="w-full flex-1">{/* Mobile Menu Button can go here */}</div>
+                <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100/40 px-4 lg:px-6">
+                    {/* Mobile Sidebar */}
+                    <MobileSidebar 
+                        navLinks={navLinks} 
+                        title="LearnBridgeEdu"
+                        logo={logoElement}
+                    >
+                        {studentProfileCard}
+                    </MobileSidebar>
+                    
+                    <div className="flex-1" />
                     <UserNav userEmail={session.user.email} userName={profile?.full_name} />
                 </header>
-                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50">
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50 overflow-auto">
                     {children}
                 </main>
             </div>

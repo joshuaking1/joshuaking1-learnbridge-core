@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import Image from 'next/image';
 import { LayoutDashboard, BookText, FileText, Library, LineChart, BarChart, MessageSquare, Bot } from 'lucide-react';
 import { UserNav } from '@/components/shared/user-nav'; // We will create this component next
+import { MobileSidebar } from '@/components/shared/mobile-sidebar';
 
 export default async function TeacherDashboardLayout({
     children,
@@ -57,19 +58,24 @@ export default async function TeacherDashboardLayout({
         { href: "/teacher/plc-forum", label: "PLC Forum", icon: MessageSquare },
     ];
 
+    const logoElement = (
+        <Image 
+            src="/LearnBridge logo FAVICON.png" 
+            alt="LearnBridge Logo" 
+            width={24} 
+            height={24} 
+            className="object-contain"
+        />
+    );
+
     return (
         <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
+            {/* Desktop Sidebar */}
             <div className="hidden border-r bg-gray-100/40 lg:block dark:bg-gray-800/40">
                 <div className="flex h-full max-h-screen flex-col gap-2">
                     <div className="flex h-[60px] items-center border-b px-6">
                         <Link className="flex items-center gap-2 font-semibold" href="/teacher">
-                            <Image 
-                                src="/LearnBridge logo FAVICON.png" 
-                                alt="LearnBridge Logo" 
-                                width={24} 
-                                height={24} 
-                                className="object-contain"
-                            />
+                            {logoElement}
                             <span className="">LearnBridgeEdu</span>
                         </Link>
                     </div>
@@ -89,14 +95,23 @@ export default async function TeacherDashboardLayout({
                     </div>
                 </div>
             </div>
+            
+            {/* Main Content */}
             <div className="flex flex-col">
-                <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
-                    <div className="w-full flex-1">
+                <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100/40 px-4 lg:px-6 dark:bg-gray-800/40">
+                    {/* Mobile Sidebar */}
+                    <MobileSidebar 
+                        navLinks={navLinks} 
+                        title="LearnBridgeEdu"
+                        logo={logoElement}
+                    />
+                    
+                    <div className="flex-1">
                         {/* Future search bar can go here */}
                     </div>
                     <UserNav userEmail={session.user.email} userName={profile?.full_name} />
                 </header>
-                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900">
+                <main className="flex-1 p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 overflow-auto">
                     {children}
                 </main>
             </div>
