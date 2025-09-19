@@ -5,7 +5,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
-import { LayoutDashboard, BookText, FileText, Library, LineChart, BarChart, MessageSquare, Bot } from 'lucide-react';
+import { ServerIcon } from '@/lib/icon-map';
 import { UserNav } from '@/components/shared/user-nav'; // We will create this component next
 import { MobileSidebar } from '@/components/shared/mobile-sidebar';
 
@@ -48,14 +48,14 @@ export default async function TeacherDashboardLayout({
         .single();
     
     const navLinks = [
-        { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/teacher/lesson-planner", label: "Lesson Planner", icon: BookText },
-        { href: "/teacher/assessments", label: "Assessments", icon: FileText },
-        { href: "/teacher/co-teacher", label: "AI Co-Teacher", icon: Bot },
-        { href: "/teacher/resources", label: "Resource Vault", icon: Library },
-        { href: "/teacher/progress",label: "Student Progress", icon: LineChart },
-        { href: "/teacher/pd", label: "PD Coach", icon: BarChart },
-        { href: "/teacher/plc-forum", label: "PLC Forum", icon: MessageSquare },
+        { href: "/teacher", label: "Dashboard", iconName: "LayoutDashboard" },
+        { href: "/teacher/lesson-planner", label: "Lesson Planner", iconName: "BookText" },
+        { href: "/teacher/assessments", label: "Assessments", iconName: "FileText" },
+        { href: "/teacher/co-teacher", label: "AI Co-Teacher", iconName: "Bot" },
+        { href: "/teacher/resources", label: "Resource Vault", iconName: "Library" },
+        { href: "/teacher/progress",label: "Student Progress", iconName: "LineChart" },
+        { href: "/teacher/pd", label: "PD Coach", iconName: "BarChart" },
+        { href: "/teacher/plc-forum", label: "PLC Forum", iconName: "MessageSquare" },
     ];
 
     const logoElement = (
@@ -87,7 +87,7 @@ export default async function TeacherDashboardLayout({
                                     href={link.href}
                                     className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50"
                                 >
-                                    <link.icon className="h-5 w-5" />
+                                    <ServerIcon iconName={link.iconName} className="h-5 w-5" />
                                     <span>{link.label}</span>
                                 </Link>
                             ))}

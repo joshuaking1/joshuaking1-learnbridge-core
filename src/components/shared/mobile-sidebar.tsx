@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { getIcon } from '@/lib/icon-map';
 
 interface NavLink {
   href: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  iconName: string;
 }
 
 interface MobileSidebarProps {
@@ -47,17 +48,20 @@ export function MobileSidebar({ navLinks, children, title = "Navigation", logo }
             </div>
           )}
           <nav className="flex flex-col gap-2 px-2 py-4">
-            {navLinks.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-100"
-              >
-                <link.icon className="h-5 w-5" />
-                <span>{link.label}</span>
-              </a>
-            ))}
+            {navLinks.map((link) => {
+              const IconComponent = getIcon(link.iconName);
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900 hover:bg-gray-100"
+                >
+                  <IconComponent className="h-5 w-5" />
+                  <span>{link.label}</span>
+                </a>
+              );
+            })}
           </nav>
         </div>
       </SheetContent>

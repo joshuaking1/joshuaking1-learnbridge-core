@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { Shield, Home, Users, MessageSquare, BookCopy, Cpu, Swords } from 'lucide-react';
+import { Shield } from 'lucide-react';
+import { ServerIcon } from '@/lib/icon-map';
 import { UserNav } from '@/components/shared/user-nav';
 import { MobileSidebar } from '@/components/shared/mobile-sidebar';
 
@@ -39,12 +40,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', session.user.id).single();
 
     const navLinks = [
-        { href: "/admin", label: "Dashboard", icon: Home },
-        { href: "/admin/users", label: "User Management", icon: Users },
-        { href: "/admin/content", label: "Content Moderation", icon: MessageSquare },
-        { href: "/admin/curriculum", label: "Curriculum", icon: BookCopy },
-        { href: "/admin/ai-monitor", label: "AI Monitor", icon: Cpu },
-        { href: "/admin/quests", label: "Quest Authoring", icon: Swords },
+        { href: "/admin", label: "Dashboard", iconName: "Home" },
+        { href: "/admin/users", label: "User Management", iconName: "Users" },
+        { href: "/admin/content", label: "Content Moderation", iconName: "MessageSquare" },
+        { href: "/admin/curriculum", label: "Curriculum", iconName: "BookCopy" },
+        { href: "/admin/ai-monitor", label: "AI Monitor", iconName: "Cpu" },
+        { href: "/admin/quests", label: "Quest Authoring", iconName: "Swords" },
     ];
 
     const logoElement = (
@@ -66,7 +67,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                         <nav className="flex flex-col gap-2 px-2 py-4">
                             {navLinks.map((link) => (
                                 <Link key={link.href} href={link.href} className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-300 transition-all hover:bg-gray-800 hover:text-white">
-                                    <link.icon className="h-5 w-5" />
+                                    <ServerIcon iconName={link.iconName} className="h-5 w-5" />
                                     <span>{link.label}</span>
                                 </Link>
                             ))}

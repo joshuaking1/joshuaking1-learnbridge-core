@@ -5,7 +5,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Image from 'next/image';
-import { LayoutDashboard, Swords, Trophy, User, Bot } from 'lucide-react';
+import { ServerIcon } from '@/lib/icon-map';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { UserNav } from '@/components/shared/user-nav'; // Re-using our UserNav component
@@ -47,10 +47,10 @@ export default async function StudentDashboardLayout({
         .single();
 
     const navLinks = [
-        { href: "/student", label: "Dashboard", icon: LayoutDashboard },
-        { href: "/student/quests", label: "My Quests", icon: Swords },
-        { href: "/student/leaderboard", label: "Leaderboard", icon: Trophy },
-        { href: "/student/ai-teacher", label: "My AI Teacher", icon: Bot },
+        { href: "/student", label: "Dashboard", iconName: "LayoutDashboard" },
+        { href: "/student/quests", label: "My Quests", iconName: "Swords" },
+        { href: "/student/leaderboard", label: "Leaderboard", iconName: "Trophy" },
+        { href: "/student/ai-teacher", label: "My AI Teacher", iconName: "Bot" },
     ];
     
     // Simple XP calculation: level * 100
@@ -100,7 +100,7 @@ export default async function StudentDashboardLayout({
                         <nav className="flex flex-col gap-2 px-2 py-4">
                             {navLinks.map((link) => (
                                 <Link key={link.href} href={link.href} className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900">
-                                    <link.icon className="h-5 w-5" />
+                                    <ServerIcon iconName={link.iconName} className="h-5 w-5" />
                                     <span>{link.label}</span>
                                 </Link>
                             ))}
